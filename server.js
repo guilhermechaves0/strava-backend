@@ -141,6 +141,7 @@ app.get("/api/segments/:id", async (req, res) => {
     });
     res.json(response.data);
   } catch (error) {
+    console.error(`--- ERRO na rota /api/segments/${req.params.id} ---`, error.response ? error.response.data : error.message);
     res.status(500).json({ message: "Falha ao buscar detalhes do segmento." });
   }
 });
@@ -162,6 +163,7 @@ app.get("/api/segments/:id/leaderboard", async (req, res) => {
     });
     res.json(response.data);
   } catch (error) {
+    console.error(`--- ERRO na rota /api/segments/${req.params.id}/leaderboard ---`, error.response ? error.response.data : error.message);
     res.status(500).json({ message: "Falha ao buscar o leaderboard." });
   }
 });
