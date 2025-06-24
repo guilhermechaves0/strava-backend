@@ -8,10 +8,7 @@ const cookieParser = require("cookie-parser");
 const app = express();
 const PORT = 3000;
 
-const allowedOrigins = [
-  "http://localhost:5173",
-  process.env.FRONTEND_URL,
-];
+const allowedOrigins = ["http://localhost:5173", process.env.FRONTEND_URL];
 
 app.use(
   cors({
@@ -60,7 +57,6 @@ app.get("/auth/strava/callback", async (req, res) => {
         grant_type: "authorization_code",
       }
     );
-
     const { access_token, refresh_token, expires_at, athlete } =
       tokenResponse.data;
     req.session.strava_user = {
@@ -70,7 +66,6 @@ app.get("/auth/strava/callback", async (req, res) => {
       athlete: athlete,
     };
 
-    // Manda o usuário de volta para o endereço do frontend que está no ar
     res.redirect(process.env.FRONTEND_URL || "http://localhost:5173");
   } catch (error) {
     res.status(500).send("Falha na autenticação com o Strava.");
@@ -82,6 +77,7 @@ app.get("/api/user", (req, res) => {
     user: req.session.strava_user ? req.session.strava_user.athlete : null,
   });
 });
+
 app.post("/auth/logout", (req, res) => {
   req.session.destroy((err) => {
     if (err) return res.status(500).send("Não foi possível fazer logout.");
@@ -89,6 +85,7 @@ app.post("/auth/logout", (req, res) => {
     res.json({ message: "Logout bem-sucedido" });
   });
 });
+
 app.get("/api/segments", async (req, res) => {
   try {
     const { bounds, activity_type } = req.query;
@@ -112,6 +109,7 @@ app.get("/api/segments", async (req, res) => {
     res.status(500).json({ message: "Falha ao buscar dados do Strava." });
   }
 });
+
 app.get("/api/segments/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -127,11 +125,13 @@ app.get("/api/segments/:id", async (req, res) => {
     res.status(500).json({ message: "Falha ao buscar detalhes do segmento." });
   }
 });
+
 app.get("/api/segments/:id/leaderboard", async (req, res) => {
-  if (!req.session.strava_user)
+  if (!req.session.strava_user) {
     return res
       .status(401)
       .json({ message: "É preciso estar logado para ver o leaderboard." });
+  }
   try {
     const { id } = req.params;
     const accessToken = req.session.strava_user.accessToken;
@@ -147,11 +147,13 @@ app.get("/api/segments/:id/leaderboard", async (req, res) => {
     res.status(500).json({ message: "Falha ao buscar o leaderboard." });
   }
 });
+
 app.get("/api/athlete/activities", async (req, res) => {
-  if (!req.session.strava_user)
+  if (!req.session.strava_user) {
     return res
       .status(401)
       .json({ message: "É preciso estar logado para ver suas atividades." });
+  }
   try {
     const accessToken = req.session.strava_user.accessToken;
     const stravaApiUrl =
