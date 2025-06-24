@@ -31,14 +31,26 @@ app.use(
   session({
     secret: process.env.SESSION_SECRET,
     resave: false,
-    saveUninitialized: true,
+    saveUninitialized: false,
     cookie: {
-      secure: process.env.NODE_ENV === "production",
+      secure: true,
       httpOnly: true,
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      maxAge: 1000 * 60 * 60 * 24 * 7,
+      sameSite: "none",
     },
   })
 );
+
+app.get("/api/user", (req, res) => {
+  console.log("--- ROTA /api/user: ID da Sessão Recebida:", req.sessionID);
+  console.log("--- ROTA /api/user: Dados da Sessão:", req.session);
+
+  if (req.session && req.session.strava_user) {
+    res.json({ user: req.session.strava_user.athlete });
+  } else {
+    res.json({ user: null });
+  }
+});
 
 app.get("/auth/strava", (req, res) => {
   const scope = "read,read_all,activity:read_all";
@@ -51,7 +63,6 @@ app.get("/auth/strava", (req, res) => {
     scope;
   res.redirect(authUrl);
 });
-
 app.get("/auth/strava/callback", async (req, res) => {
   const { code } = req.query;
   try {
@@ -77,13 +88,6 @@ app.get("/auth/strava/callback", async (req, res) => {
     res.status(500).send("Falha na autenticação com o Strava.");
   }
 });
-
-app.get("/api/user", (req, res) => {
-  res.json({
-    user: req.session.strava_user ? req.session.strava_user.athlete : null,
-  });
-});
-
 app.post("/auth/logout", (req, res) => {
   req.session.destroy((err) => {
     if (err) return res.status(500).send("Não foi possível fazer logout.");
@@ -91,7 +95,6 @@ app.post("/auth/logout", (req, res) => {
     res.json({ message: "Logout bem-sucedido" });
   });
 });
-
 app.get("/api/segments", async (req, res) => {
   try {
     const { bounds, activity_type } = req.query;
@@ -115,7 +118,6 @@ app.get("/api/segments", async (req, res) => {
     res.status(500).json({ message: "Falha ao buscar dados do Strava." });
   }
 });
-
 app.get("/api/segments/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -131,8 +133,7 @@ app.get("/api/segments/:id", async (req, res) => {
     res.status(500).json({ message: "Falha ao buscar detalhes do segmento." });
   }
 });
-
-app.get("/api/segments/:id/leaderboard", async (req, res) => {
+app.get("/api/segments/:id/ leaderboard", async (req, res) => {
   if (!req.session.strava_user)
     return res
       .status(401)
@@ -152,7 +153,6 @@ app.get("/api/segments/:id/leaderboard", async (req, res) => {
     res.status(500).json({ message: "Falha ao buscar o leaderboard." });
   }
 });
-
 app.get("/api/athlete/activities", async (req, res) => {
   if (!req.session.strava_user)
     return res
