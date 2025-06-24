@@ -24,7 +24,6 @@ app.use(
   })
 );
 
-// --- ROTAS DE AUTENTICAÇÃO ---
 app.get("/auth/strava", (req, res) => {
   const scope = "read,read_all,activity:read_all";
   // URL reescrita para evitar o bug de formatação
@@ -85,8 +84,6 @@ app.post("/auth/logout", (req, res) => {
   });
 });
 
-// --- ROTAS DE DADOS ---
-
 app.get("/api/segments", async (req, res) => {
   try {
     const { bounds, activity_type } = req.query;
@@ -99,14 +96,12 @@ app.get("/api/segments", async (req, res) => {
       ? req.session.strava_user.accessToken
       : process.env.STRAVA_ACCESS_TOKEN;
 
-    // URL agora é limpa, sem o token
     const stravaApiUrl =
       "https://www.strava.com/api/v3/segments/explore?bounds=" +
       bounds +
       "&activity_type=" +
       activity_type;
 
-    // Token enviado no cabeçalho
     const response = await axios.get(stravaApiUrl, {
       headers: { Authorization: "Bearer " + accessToken },
     });
@@ -116,7 +111,6 @@ app.get("/api/segments", async (req, res) => {
   }
 });
 
-// Rota para os detalhes de um segmento - VERSÃO CORRIGIDA
 app.get("/api/segments/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -124,10 +118,8 @@ app.get("/api/segments/:id", async (req, res) => {
       ? req.session.strava_user.accessToken
       : process.env.STRAVA_ACCESS_TOKEN;
 
-    // URL mais limpa
     const stravaApiUrl = "https://www.strava.com/api/v3/segments/" + id;
 
-    // Token no cabeçalho
     const response = await axios.get(stravaApiUrl, {
       headers: { Authorization: "Bearer " + accessToken },
     });
@@ -146,7 +138,6 @@ app.get("/api/segments/:id/leaderboard", async (req, res) => {
   try {
     const { id } = req.params;
     const accessToken = req.session.strava_user.accessToken;
-    // URL reescrita para evitar o bug de formatação
     const stravaApiUrl =
       "https://www.strava.com/api/v3/segments/" +
       id +
@@ -162,7 +153,6 @@ app.get("/api/segments/:id/leaderboard", async (req, res) => {
 });
 
 app.get("/api/athlete/activities", async (req, res) => {
-  // Se não houver usuário logado, não há o que fazer.
   if (!req.session.strava_user) {
     return res
       .status(401)
@@ -173,7 +163,6 @@ app.get("/api/athlete/activities", async (req, res) => {
   try {
     const accessToken = req.session.strava_user.accessToken;
 
-    // Usamos o endpoint de atividades do atleta, pedindo as 30 mais recentes
     const stravaApiUrl =
       "https://www.strava.com/api/v3/athlete/activities?page=1&per_page=30";
 
