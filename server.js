@@ -181,6 +181,6 @@ app.get("/api/athlete/activities", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Servidor backend rodando em http://localhost:${PORT}`);
+app.listen(process.env.PORT || PORT, '0.0.0.0', () => {
+  console.log(`Servidor iniciado. Ouvindo na porta ${process.env.PORT || PORT}`);
 });
