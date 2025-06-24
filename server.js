@@ -8,6 +8,8 @@ const cookieParser = require("cookie-parser");
 const app = express();
 const PORT = 3000;
 
+app.set("trust proxy", 1);
+
 const allowedOrigins = ["http://localhost:5173", process.env.FRONTEND_URL];
 
 app.use(
@@ -24,12 +26,17 @@ app.use(
 );
 
 app.use(cookieParser());
+
 app.use(
   session({
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: true,
-    cookie: { secure: false },
+    cookie: {
+      secure: process.env.NODE_ENV === "production",
+      httpOnly: true,
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    },
   })
 );
 
@@ -65,7 +72,6 @@ app.get("/auth/strava/callback", async (req, res) => {
       expiresAt: expires_at,
       athlete: athlete,
     };
-
     res.redirect(process.env.FRONTEND_URL || "http://localhost:5173");
   } catch (error) {
     res.status(500).send("Falha na autenticação com o Strava.");
@@ -127,11 +133,10 @@ app.get("/api/segments/:id", async (req, res) => {
 });
 
 app.get("/api/segments/:id/leaderboard", async (req, res) => {
-  if (!req.session.strava_user) {
+  if (!req.session.strava_user)
     return res
       .status(401)
       .json({ message: "É preciso estar logado para ver o leaderboard." });
-  }
   try {
     const { id } = req.params;
     const accessToken = req.session.strava_user.accessToken;
@@ -149,11 +154,10 @@ app.get("/api/segments/:id/leaderboard", async (req, res) => {
 });
 
 app.get("/api/athlete/activities", async (req, res) => {
-  if (!req.session.strava_user) {
+  if (!req.session.strava_user)
     return res
       .status(401)
       .json({ message: "É preciso estar logado para ver suas atividades." });
-  }
   try {
     const accessToken = req.session.strava_user.accessToken;
     const stravaApiUrl =
